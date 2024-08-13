@@ -17,7 +17,7 @@ build_postgres:
     - echo "Создаем сеть Docker"
     - docker network create my_network || echo "Сеть уже существует"
     - echo "Запускаем реестр Docker"
-    - docker run -d -p 5000:5000 --name registry registry:2 || echo "Реестр уже запущен"
+    - docker run -d -p 5000:5000 --name registry1 registry:2 || echo "Реестр уже запущен"
     - echo "Запускаем PostgreSQL"
     - docker run --name postgres --network my_network -e POSTGRES_DB=elstation -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=root -p 5432:5432 -d postgres:16
 
