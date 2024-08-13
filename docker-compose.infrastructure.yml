@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # Сервис для PostgreSQL
+  postgres:
+    image: postgis/postgis
+    environment:
+
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: elstation
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  # Сервис для pgAdmin
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "8080:80"
+    depends_on:
+      - postgres
+
+  # Сервис для клиента Node.js
+  client:
+    build:
+      context: ./client  # Путь к вашей папке с клиентом
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+
+  # Сервис для сервера Node.js
+  server:
+    build:
+      context: ./server  # Путь к вашей папке с сервером
+      dockerfile: Dockerfile
+    ports:
+      - "5000:5000"
+    environment:
+      DATABASE_HOST: postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: root
+      DATABASE_NAME: elstation
+    depends_on:
+      - postgres
+
+volumes:
+  pgdata:
