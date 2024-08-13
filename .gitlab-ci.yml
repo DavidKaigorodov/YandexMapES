@@ -14,18 +14,21 @@ build_postgres:
   services:
     - docker:dind
   script:
-    - docker run -d -p 6000:6000 --name registry registry:2
-    - docker run --name postgres -e POSTGRES_DB=elstation -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=root -p 5432:5432 -d postgres:16
-    - docker network create my_network
-    - docker network connect my_network postgres
+    - echo "Создаем сеть Docker"
+    - docker network create my_network || echo "Сеть уже существует"
+    - echo "Запускаем реестр Docker"
+    - docker run -d -p 6000:6000 --name registry registry:2 || echo "Реестр уже запущен"
+    - echo "Запускаем PostgreSQL"
+    - docker run --name postgres --network my_network -e POSTGRES_DB=elstation -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=root -p 5432:5432 -d postgres:16
 
- build_pgadmin:
+build_pgadmin:
   stage: build_pgadmin
   image: docker:latest
   services:
     - docker:dind
   script:
-    - docker run -p 8080:80 --name pgadmin --network my_network -e 'PGADMIN_DEFAULT_EMAIL=admin@example.com' -e 'PGADMIN_DEFAULT_PASSWORD=admin' -d dpage/pgadmin4   
+    - echo "Запускаем PGAdmin"
+    - docker run -p 8080:80 --name pgadmin --network my_network -e 'PGADMIN_DEFAULT_EMAIL=admin@example.com' -e 'PGADMIN_DEFAULT_PASSWORD=admin' -d dpage/pgadmin4
 
 build:
   stage: build
@@ -33,12 +36,14 @@ build:
   services:
     - docker:dind
   script:
+    - echo "Сборка клиента и сервера"
     - docker build -t client ./client
     - docker build -t server ./server
     - docker tag server:latest $LOGIN/server:latest
-    - docker tag server:latest $LOGIN/client:latest
-    - docker login $LOGIN
-    # Пуш в реестр GitLab
+    - docker tag client:latest $LOGIN/client:latest
+    - echo "Логин в реестр GitLab"
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin
+    - echo "Пуш образов в реестр"
     - docker push $LOGIN/client:latest
     - docker push $LOGIN/server:latest
 
@@ -48,8 +53,7 @@ deploy:
   services:
     - docker:dind
   script:
-    # Логин в реестр
+    - echo "Логин в реестр для развертывания"
     - echo ${CI_REGISTRY_PASSWORD} | docker login -u ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}
-
-    # Запуск docker-compose
+    - echo "Запуск docker-compose"
     - docker-compose -f docker-compose.infrastructure.yml up -d
