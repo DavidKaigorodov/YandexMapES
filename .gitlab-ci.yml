@@ -1,6 +1,4 @@
 stages:
-  - build_postgres
-  - build_pgadmin
   - build
   - deploy
 
@@ -14,14 +12,15 @@ build:
   services:
     - docker:dind
   script:
+    - docker run -d -p 6000:6000 --name registry1 registry:2 || echo "Реестр уже запущен"
     - echo "Сборка клиента и сервера"
     - docker-compose -f docker-compose.yml build
     - docker tag postgis/postgis:latest $LOGIN/postgis/postgis:latest
     - docker tag dpage/pgadmin4:latest $LOGIN/dpage/pgadmin4:latest
     - docker tag server:latest $LOGIN/server:latest
-    - docker tag client:latest $LOGIN/client:latest 
+    - docker tag client:latest $LOGIN/client:latest
     - echo "Логин в реестр GitLab"
-    - docker login
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin
     - echo "Пуш образов в реестр"
     - docker push $LOGIN/postgis/postgis:latest
     - docker push $LOGIN/dpage/pgadmin4:latest
@@ -35,6 +34,6 @@ deploy:
     - docker:dind
   script:
     - echo "Логин в реестр для развертывания"
-    - echo ${CI_REGISTRY_PASSWORD} | docker login -u ${CI_REGISTRY_USER} --password-stdin ${CI_REGISTRY}
+    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin
     - echo "Запуск docker-compose"
     - docker-compose -f docker-compose.infrastructure.yml up -d
