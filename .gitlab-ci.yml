@@ -1,4 +1,6 @@
 stages:
+  - build_postgres
+  - build_pgadmin
   - build
   - deploy
 
@@ -6,8 +8,8 @@ variables:
   IMAGE_NAME: $CI_REGISTRY_IMAGE
   LOGIN: raizero42
 
-build:
-  stage: build
+build_postgres:
+  stage: build_postgres
   image: docker:latest
   services:
     - docker:dind
@@ -16,7 +18,21 @@ build:
     - docker run --name postgres -e POSTGRES_DB=elstation -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=root -p 5432:5432 -d postgres:16
     - docker network create my_network
     - docker network connect my_network postgres
-    - docker run -p 8080:80 --name pgadmin --network my_network -e 'PGADMIN_DEFAULT_EMAIL=admin@example.com' -e 'PGADMIN_DEFAULT_PASSWORD=admin' -d dpage/pgadmin4
+
+ build_pgadmin:
+  stage: build_pgadmin
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
+    - docker run -p 8080:80 --name pgadmin --network my_network -e 'PGADMIN_DEFAULT_EMAIL=admin@example.com' -e 'PGADMIN_DEFAULT_PASSWORD=admin' -d dpage/pgadmin4   
+
+build:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:dind
+  script:
     - docker build -t client ./client
     - docker build -t server ./server
     - docker tag server:latest $LOGIN/server:latest
