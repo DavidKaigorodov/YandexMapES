@@ -3,7 +3,7 @@ version: '3.8'
 services:
   # Сервис для PostgreSQL
   postgres:
-    image: postgis/postgis
+    image:   
     environment:
 
       POSTGRES_USER: postgres

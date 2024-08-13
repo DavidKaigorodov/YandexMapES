@@ -8,28 +8,6 @@ variables:
   IMAGE_NAME: $CI_REGISTRY_IMAGE
   LOGIN: raizero42
 
-build_postgres:
-  stage: build_postgres
-  image: docker:latest
-  services:
-    - docker:dind
-  script:
-    - echo "Создаем сеть Docker"
-    - docker network create my_network || echo "Сеть уже существует"
-    - echo "Запускаем реестр Docker"
-    - docker run -d -p 5000:5000 --name registry1 registry:2 || echo "Реестр уже запущен"
-    - echo "Запускаем PostgreSQL"
-    - docker run --name postgres --network my_network -e POSTGRES_DB=elstation -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=root -p 5432:5432 -d postgres:16
-
-build_pgadmin:
-  stage: build_pgadmin
-  image: docker:latest
-  services:
-    - docker:dind
-  script:
-    - echo "Запускаем PGAdmin"
-    - docker run -p 8080:80 --name pgadmin --network my_network -e 'PGADMIN_DEFAULT_EMAIL=admin@example.com' -e 'PGADMIN_DEFAULT_PASSWORD=admin' -d dpage/pgadmin4
-
 build:
   stage: build
   image: docker:latest
@@ -37,13 +15,16 @@ build:
     - docker:dind
   script:
     - echo "Сборка клиента и сервера"
-    - docker build -t client ./client
-    - docker build -t server ./server
+    - docker-compose -f docker-compose.yml build
+    - docker tag postgis/postgis:latest $LOGIN/postgis/postgis:latest
+    - docker tag dpage/pgadmin4:latest $LOGIN/dpage/pgadmin4:latest
     - docker tag server:latest $LOGIN/server:latest
-    - docker tag client:latest $LOGIN/client:latest
+    - docker tag client:latest $LOGIN/client:latest 
     - echo "Логин в реестр GitLab"
-    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin
+    - docker login
     - echo "Пуш образов в реестр"
+    - docker push $LOGIN/postgis/postgis:latest
+    - docker push $LOGIN/dpage/pgadmin4:latest
     - docker push $LOGIN/client:latest
     - docker push $LOGIN/server:latest
 
