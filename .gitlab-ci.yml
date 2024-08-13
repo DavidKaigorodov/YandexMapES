@@ -5,16 +5,20 @@ stages:
 variables:
   IMAGE_NAME: $CI_REGISTRY_IMAGE
   LOGIN: raizero42
+  DOCKER_HOST: tcp://docker:2375
+  DOCKER_TLS_CERTDIR: ""
 
 build:
   stage: build
-  image: docker:latest
+  image: docker:20.10.7  # Возможно, укажите более стабильную версию
   services:
     - docker:dind
   script:
+    - echo "Запуск реестра Docker"
     - docker run -d -p 6000:6000 --name registry1 registry:2 || echo "Реестр уже запущен"
     - echo "Сборка клиента и сервера"
     - docker-compose -f docker-compose.yml build
+    - echo "Тегирование образов"
     - docker tag postgis/postgis:latest $LOGIN/postgis/postgis:latest
     - docker tag dpage/pgadmin4:latest $LOGIN/dpage/pgadmin4:latest
     - docker tag server:latest $LOGIN/server:latest
@@ -29,7 +33,7 @@ build:
 
 deploy:
   stage: deploy
-  image: docker:latest
+  image: docker:20.10.7
   services:
     - docker:dind
   script:
