@@ -19,7 +19,7 @@ build:
 
   script:
     - echo "Запуск реестра Docker"
-    - docker run -d -p 6000:6000 --name registry registry:2 
+    - docker -H tcp://localhost:2375 -d -p 6000:6000 --name registry registry:2 
     - echo "Сборка клиента и сервера"
     - docker-compose -f docker-compose.yml down
     - docker-compose -f docker-compose.yml build
