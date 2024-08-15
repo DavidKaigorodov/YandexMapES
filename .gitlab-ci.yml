@@ -14,7 +14,6 @@ build:
   services:
     - name: docker:dind
       command: ["--host=unix:///var/run/docker.sock"]  # Убедитесь, что используется правильная команда
-    - privileged: true
   before_script:
     - apk add --no-cache docker-compose  # Установите docker-compose
     - docker pull docker:dind
