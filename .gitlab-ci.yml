@@ -18,8 +18,10 @@ build:
     - apk add --no-cache docker-compose  # Установите docker-compose
 
   script:
+    - docker pull docker:dind
+    - docker run --privileged --name dind-container -d docker:dind
     - echo "Запуск реестра Docker"
-    - docker -H tcp://localhost:2375 run -d -p 6000:6000 --name registry registry:2 
+    - docker run -d -p 6000:6000 --name registry registry:2 
     - echo "Сборка клиента и сервера"
     - docker-compose -f docker-compose.yml down
     - docker-compose -f docker-compose.yml build
