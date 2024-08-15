@@ -13,7 +13,7 @@ build:
   image: docker:git  # Или корректный образ с Docker и Git
   services:
     - name: docker:dind
-      command: ["- docker pull docker:dind"]
+      command: ["docker pull docker:dind"]
   before_script:
     - apk add --no-cache docker-compose  # Установите docker-compose
     - docker run --cap-add SYS_ADMIN --privileged --name dind-container -d docker:dind
