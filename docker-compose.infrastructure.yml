@@ -9,6 +9,8 @@ services:
       POSTGRES_DB: elstation
     ports:
       - "5432:5432"
+    networks:
+      - my_network
     volumes:
       - pgdata:/var/lib/postgresql/data
 
@@ -20,6 +22,8 @@ services:
       PGADMIN_DEFAULT_PASSWORD: admin
     ports:
       - "8080:80"
+    networks:
+      - my_network
     depends_on:
       - postgres
 
@@ -28,12 +32,16 @@ services:
     image: "raizero/docker_es:react-app"
     ports:
       - "3000:3000"
+    networks:
+      - my_network
 
   # Сервис для сервера Node.js
   server:
     image: "raizero/docker_es:yandex-map-server"
     ports:
       - "5000:5000"
+    networks:
+      - my_network
     environment:
       DATABASE_HOST: postgres
       DATABASE_PORT: 5432
