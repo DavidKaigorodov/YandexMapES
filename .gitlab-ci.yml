@@ -23,7 +23,7 @@ build:
   script:
     - echo "Запуск реестра Docker"
     - docker run -d -p 6000:6000 --name registry registry:2
-    - echo "сборка всех образов"
+    - echo "сборка всех образов      "
     - docker pull postgis/postgis:latest
     - docker pull dpage/pgadmin4:latest
     - docker build -t yandex-map-server ./server
