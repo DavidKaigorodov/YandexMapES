@@ -4,41 +4,44 @@ stages:
 
 variables:
   IMAGE_NAME: $CI_REGISTRY_IMAGE
-  LOGIN: raizero42
+  LOGIN: raizero
   DOCKER_TLS_CERTDIR: ""
-  DOCKER_DRIVER: overlay2  # Добавьте эту строку, чтобы явно указать драйвер
+  DOCKER_DRIVER: overlay2
+  DOCKER_PASSWORD: Asdzxc2003
 
 build:
   stage: build
-  image: docker:git  # Или корректный образ с Docker и Git
+  image: docker:git
+
   services:
     - name: docker:dind
-      command: ["--host=unix:///var/run/docker.sock"]  # Убедитесь, что используется правильная команда
-    - privileged: true
-  before_script:
-    - apk add --no-cache docker-compose  # Установите docker-compose
-    - docker pull docker:dind || Докер динд есть
-    - docker run --network host --privileged --name dind-container -d docker:dind
-
+      command: ["--host=unix:///var/run/docker.sock"]  
+      
+  before_script: 
+    - docker run --network host --privileged --name dind-container -d docker:dind 
 
   script:
     - echo "Запуск реестра Docker"
-    - docker run -d -p 6000:6000 --name registry registry:2 
-    - echo "Сборка клиента и сервера"
-    - docker-compose -f docker-compose.yml down
-    - docker-compose -f docker-compose.yml build
+    - docker run -d -p 6000:6000 --name registry registry:2
+    - echo "сборка всех образов"
+    - docker pull postgis/postgis:latest
+    - docker pull dpage/pgadmin4:latest
+    - docker build -t yandex-map-server ./server
+    - docker build -t react-app ./client
+    - docker images
     - echo "Тегирование образов"
-    - docker tag postgis/postgis:latest $LOGIN/postgis/postgis:latest
-    - docker tag dpage/pgadmin4:latest $LOGIN/dpage/pgadmin4:latest
-    - docker tag server:latest $LOGIN/server:latest
-    - docker tag client:latest $LOGIN/client:latest
-    - echo "Логин в реестр GitLab"
-    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin
+    - docker tag postgis/postgis raizero/docker_es:postgres
+    - docker tag dpage/pgadmin4 raizero/docker_es:pgadmin4
+    - docker tag yandex-map-server raizero/docker_es:yandex-map-server
+    - docker tag react-app raizero/docker_es:react-app
+    - docker images
+    - docker run --name sleepy_wescoff -e POSTGRES_DB=elstation -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=root -p 5432:5432 -d postgis/postgis
     - echo "Пуш образов в реестр"
-    - docker push $LOGIN/postgis/postgis:latest
-    - docker push $LOGIN/dpage/pgadmin4:latest
-    - docker push $LOGIN/client:latest
-    - docker push $LOGIN/server:latest
+    - echo $DOCKER_PASSWORD | docker login -u $LOGIN --password-stdin
+    - docker push raizero/docker_es:postgres
+    - docker push raizero/docker_es:pgadmin4
+    - docker push raizero/docker_es:yandex-map-server
+    - docker push raizero/docker_es:react-app 
 
 deploy:
   stage: deploy
@@ -51,6 +54,10 @@ deploy:
 
   script:
     - echo "Логин в реестр для развертывания"
-    - echo "${CI_REGISTRY_PASSWORD}" | docker login -u "${CI_REGISTRY_USER}" --password-stdin
+    - echo $DOCKER_PASSWORD | docker login -u $LOGIN --password-stdin
+    - docker pull raizero/docker_es:postgres
+    - docker pull raizero/docker_es:pgadmin4
+    - docker pull raizero/docker_es:react-app
+    - docker pull raizero/docker_es:yandex-map-server
     - echo "Запуск docker-compose"
     - docker-compose -f docker-compose.infrastructure.yml up -d

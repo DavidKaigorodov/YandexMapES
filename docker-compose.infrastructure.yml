@@ -1,7 +1,7 @@
 services:
   # Сервис для PostgreSQL
   postgres:
-    image:   
+    image: "raizero/docker_es:postgres"
     environment:
 
       POSTGRES_USER: postgres
@@ -14,7 +14,7 @@ services:
 
   # Сервис для pgAdmin
   pgadmin:
-    image: dpage/pgadmin4
+    image: "raizero/docker_es:pgadmin4"
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@example.com
       PGADMIN_DEFAULT_PASSWORD: admin
@@ -25,17 +25,13 @@ services:
 
   # Сервис для клиента Node.js
   client:
-    build:
-      context: ./client  # Путь к вашей папке с клиентом
-      dockerfile: Dockerfile
+    image: "raizero/docker_es:react-app"
     ports:
       - "3000:3000"
 
   # Сервис для сервера Node.js
   server:
-    build:
-      context: ./server  # Путь к вашей папке с сервером
-      dockerfile: Dockerfile
+    image: "raizero/docker_es:yandex-map-server"
     ports:
       - "5000:5000"
     environment:
