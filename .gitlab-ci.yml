@@ -21,7 +21,7 @@ build:
     - docker run --network host --privileged --name dind-container -d docker:dind 
 
   script:
-    - echo "Запуск реестра Docker"
+    - echo "Запуск реестра Docker "
     - docker run -d -p 6000:6000 --name registry registry:2
     - echo "сборка всех образов"
     - docker pull postgis/postgis:latest
